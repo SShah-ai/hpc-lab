@@ -1,6 +1,7 @@
 ---
-- name: Base configuration for all cluster nodes
+- name: Base configuration and authentication for all cluster nodes
   hosts: cluster
   become: true
   roles:
     - common
+    - munge

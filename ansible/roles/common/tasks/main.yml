@@ -41,7 +41,9 @@
     name: "{{ item.name }}"
     repo: "{{ item.repo }}"
     enabled: false
+    description: "{{ item.description }}"
+
   loop:
-    - { name: repo-non-oss, repo: "http://download.opensuse.org/distribution/leap/15.6/repo/non-oss/" }
-    - { name: repo-update-non-oss, repo: "http://download.opensuse.org/update/leap/15.6/non-oss/" }
-    - { name: repo-openh264, repo: "http://codecs.opensuse.org/openh264/openSUSE_Leap/" }
+    - { name: repo-non-oss, description: "Non-OSS Repository", repo: "http://download.opensuse.org/distribution/leap/15.6/repo/non-oss/" }
+    - { name: repo-update-non-oss, description: "Non-OSS Repository", repo: "http://download.opensuse.org/update/leap/15.6/non-oss/" }
+    - { name: repo-openh264, description: "Non-OSS Repository", repo: "http://codecs.opensuse.org/openh264/openSUSE_Leap/" }

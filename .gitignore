@@ -2,3 +2,4 @@
 cloud-init/*/
 *.iso
 *.qcow2
+ansible/.secrets/

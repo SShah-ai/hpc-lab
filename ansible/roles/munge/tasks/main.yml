@@ -1,0 +1,33 @@
+---
+- name: Install MUNGE
+  community.general.zypper:
+    name: munge
+    state: present
+
+- name: Generate the MUNGE key on the controller (only if none exists)
+  ansible.builtin.command: dd if=/dev/urandom of=/etc/munge/munge.key bs=1 count=1024
+  args:
+    creates: /etc/munge/munge.key
+  when: inventory_hostname in groups['controller']
+
+- name: Fetch the MUNGE key from the controller to the Ansible host
+  ansible.builtin.fetch:
+    src: /etc/munge/munge.key
+    dest: "{{ playbook_dir }}/.secrets/munge.key"
+    flat: true
+  when: inventory_hostname in groups['controller']
+
+- name: Install the cluster MUNGE key on every node
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/.secrets/munge.key"
+    dest: /etc/munge/munge.key
+    owner: munge
+    group: munge
+    mode: "0400"
+  notify: Restart munge
+
+- name: Ensure munge is enabled and running
+  ansible.builtin.systemd_service:
+    name: munge
+    enabled: true
+    state: started
