@@ -1,0 +1,12 @@
+---
+- name: Restart slurmctld
+  ansible.builtin.systemd_service:
+    name: slurmctld
+    state: restarted
+  when: inventory_hostname in groups['controller']
+
+- name: Restart slurmd
+  ansible.builtin.systemd_service:
+    name: slurmd
+    state: restarted
+  when: inventory_hostname in groups['compute']

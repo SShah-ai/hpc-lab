@@ -1,0 +1,46 @@
+# Managed by Ansible - must be identical on every node
+ClusterName={{ slurm_cluster_name }}
+SlurmctldHost={{ groups['controller'][0] }}({{ hostvars[groups['controller'][0]].ansible_host }})
+
+# Authentication
+AuthType=auth/munge
+CredType=cred/munge
+
+# Daemons, ports and paths
+SlurmUser=slurm
+SlurmctldPort=6817
+SlurmdPort=6818
+StateSaveLocation=/var/lib/slurm
+SlurmdSpoolDir=/var/spool/slurm
+SlurmctldLogFile=/var/log/slurm/slurmctld.log
+SlurmdLogFile=/var/log/slurm/slurmd.log
+SlurmctldPidFile=/var/run/slurm/slurmctld.pid
+SlurmdPidFile=/var/run/slurm/slurmd.pid
+
+# Process tracking and task launch
+ProctrackType=proctrack/linuxproc
+TaskPlugin=task/affinity
+MpiDefault=none
+ReturnToService=2
+
+# Security and limits (carried over from SUSE defaults)
+CommunicationParameters=block_null_hash
+PropagateResourceLimitsExcept=MEMLOCK
+
+# Scheduling
+SchedulerType=sched/backfill
+SelectType=select/cons_tres
+SelectTypeParameters=CR_Core_Memory
+
+# Accounting (enabled in stage 5)
+AccountingStorageType=accounting_storage/none
+JobAcctGatherType=jobacct_gather/linux
+JobCompType=jobcomp/none
+
+# Compute nodes - generated from Ansible facts
+{% for h in groups['compute'] %}
+NodeName={{ h }} NodeAddr={{ hostvars[h].ansible_host }} CPUs={{ hostvars[h].ansible_facts.processor_vcpus }} RealMemory={{ (hostvars[h].ansible_facts.memtotal_mb * slurm_mem_fraction) | int }} State=UNKNOWN
+{% endfor %}
+
+# Partitions
+PartitionName={{ slurm_default_partition }} Nodes={{ groups['compute'] | join(',') }} Default=YES MaxTime=INFINITE State=UP

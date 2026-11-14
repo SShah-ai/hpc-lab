@@ -5,3 +5,7 @@ base_packages:
   - rsync
   - tmux
   - chrony
+
+slurm_cluster_name: hpclab
+slurm_default_partition: debug
+slurm_mem_fraction: 0.9

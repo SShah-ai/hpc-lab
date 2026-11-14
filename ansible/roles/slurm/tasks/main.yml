@@ -1,0 +1,69 @@
+---
+- name: Install Slurm controller packages
+  community.general.zypper:
+    name: [slurm, slurm-munge]
+    state: present
+  when: inventory_hostname in groups['controller']
+
+- name: Install Slurm compute packages
+  community.general.zypper:
+    name: [slurm-node, slurm-munge]
+    state: present
+  when: inventory_hostname in groups['compute']
+
+- name: Ensure the Slurm config directory exists
+  ansible.builtin.file:
+    path: /etc/slurm
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create controller state and log directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: slurm
+    group: slurm
+    mode: "0755"
+  loop:
+    - /var/lib/slurm
+    - /var/log/slurm
+  when: inventory_hostname in groups['controller']
+
+- name: Create compute spool and log directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - /var/spool/slurm
+    - /var/log/slurm
+  when: inventory_hostname in groups['compute']
+
+- name: Deploy slurm.conf (identical on every node)
+  ansible.builtin.template:
+    src: slurm.conf.j2
+    dest: /etc/slurm/slurm.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Restart slurmctld
+    - Restart slurmd
+
+- name: Ensure slurmctld is enabled and running
+  ansible.builtin.systemd_service:
+    name: slurmctld
+    enabled: true
+    state: started
+  when: inventory_hostname in groups['controller']
+
+- name: Ensure slurmd is enabled and running
+  ansible.builtin.systemd_service:
+    name: slurmd
+    enabled: true
+    state: started
+  when: inventory_hostname in groups['compute']
