@@ -1,0 +1,7 @@
+cluster_domain: hpc.lab
+base_packages:
+  - vim
+  - bash-completion
+  - rsync
+  - tmux
+  - chrony

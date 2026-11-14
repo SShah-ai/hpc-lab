@@ -1,0 +1,13 @@
+# Managed by Ansible - manual changes will be overwritten
+127.0.0.1   localhost
+::1         localhost ipv6-localhost ipv6-loopback
+fe00::0     ipv6-localnet
+ff00::0     ipv6-mcastprefix
+ff02::1     ipv6-allnodes
+ff02::2     ipv6-allrouters
+ff02::3     ipv6-allhosts
+
+# Cluster nodes
+{% for h in groups['cluster'] %}
+{{ hostvars[h].ansible_host }}  {{ h }}.{{ cluster_domain }}  {{ h }}
+{% endfor %}

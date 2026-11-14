@@ -1,0 +1,36 @@
+---
+- name: Install base packages
+  community.general.zypper:
+    name: "{{ base_packages }}"
+    state: present
+
+- name: Deploy cluster /etc/hosts
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure chronyd is enabled and running
+  ansible.builtin.systemd_service:
+    name: chronyd
+    enabled: true
+    state: started
+
+- name: Create journald drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    mode: "0755"
+
+- name: Keep the systemd journal across reboots
+  ansible.builtin.copy:
+    dest: /etc/systemd/journald.conf.d/10-persistent.conf
+    content: |
+      [Journal]
+      Storage=persistent
+    mode: "0644"
+  notify:
+    - Restart journald
+    - Flush journal to disk
