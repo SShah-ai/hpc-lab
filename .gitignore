@@ -1,0 +1,4 @@
+# Generated per-node cloud-init files and images: build output, not source
+cloud-init/*/
+*.iso
+*.qcow2
