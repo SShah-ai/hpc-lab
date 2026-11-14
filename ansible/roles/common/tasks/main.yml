@@ -34,3 +34,14 @@
   notify:
     - Restart journald
     - Flush journal to disk
+
+
+- name: Disable repositories not needed on cluster nodes
+  community.general.zypper_repository:
+    name: "{{ item.name }}"
+    repo: "{{ item.repo }}"
+    enabled: false
+  loop:
+    - { name: repo-non-oss, repo: "http://download.opensuse.org/distribution/leap/15.6/repo/non-oss/" }
+    - { name: repo-update-non-oss, repo: "http://download.opensuse.org/update/leap/15.6/non-oss/" }
+    - { name: repo-openh264, repo: "http://codecs.opensuse.org/openh264/openSUSE_Leap/" }
