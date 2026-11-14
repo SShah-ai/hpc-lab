@@ -33,6 +33,8 @@ users:
     shell: /bin/bash
     ssh_authorized_keys:
       - ${PUBKEY}
+packages:
+  - python311
 EOF
 
   # network-config: NIC 1 = DHCP on default (internet), NIC 2 = static on hpc-net
