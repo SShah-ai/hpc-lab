@@ -8,6 +8,17 @@
       - slurm-seff
     state: present
 
+- name: Apply the MariaDB settings Slurm recommends
+  ansible.builtin.template:
+    src: mariadb-slurm.cnf.j2
+    dest: /etc/my.cnf.d/slurm.cnf
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Restart mariadb
+    - Restart slurmdbd
+
 - name: Ensure MariaDB is enabled and running
   ansible.builtin.systemd_service:
     name: mariadb
@@ -51,3 +62,36 @@
     state: absent
     login_user: root
     login_unix_socket: "{{ slurmdbd_mariadb_socket }}"
+
+- name: Create the Slurm log directory
+  ansible.builtin.file:
+    path: /var/log/slurm
+    state: directory
+    owner: slurm
+    group: slurm
+    mode: "0755"
+
+- name: Deploy slurmdbd.conf (contains the database password)
+  ansible.builtin.template:
+    src: slurmdbd.conf.j2
+    dest: /etc/slurm/slurmdbd.conf
+    owner: slurm
+    group: slurm
+    mode: "0600"
+  diff: false
+  notify: Restart slurmdbd
+
+- name: Apply pending restarts now
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure slurmdbd is enabled and running
+  ansible.builtin.systemd_service:
+    name: slurmdbd
+    enabled: true
+    state: started
+
+- name: Wait for slurmdbd to listen on its port
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: 6819
+    timeout: 60

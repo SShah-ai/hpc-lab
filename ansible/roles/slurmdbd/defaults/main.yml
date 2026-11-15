@@ -1,2 +1,3 @@
 ---
 slurmdbd_mariadb_socket: /run/mysql/mysql.sock
+slurmdbd_innodb_buffer_pool_size: 512M

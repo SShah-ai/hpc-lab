@@ -1,0 +1,6 @@
+# Managed by Ansible
+# Values from Slurm's accounting documentation. slurmdbd logs an error
+# when a setting is below half of the documented value.
+[mysqld]
+innodb_buffer_pool_size={{ slurmdbd_innodb_buffer_pool_size }}
+innodb_lock_wait_timeout=900

@@ -32,9 +32,12 @@ SchedulerType=sched/backfill
 SelectType=select/cons_tres
 SelectTypeParameters=CR_Core_Memory
 
-# Accounting (enabled in stage 5)
-AccountingStorageType=accounting_storage/none
+# Accounting (slurmdbd on the controller)
+AccountingStorageType=accounting_storage/slurmdbd
+AccountingStorageHost={{ groups["controller"][0] }}
+AccountingStoragePort=6819
 JobAcctGatherType=jobacct_gather/linux
+JobAcctGatherFrequency=30
 JobCompType=jobcomp/none
 
 # Compute nodes - generated from Ansible facts
