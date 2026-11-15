@@ -1,0 +1,53 @@
+---
+- name: Install MariaDB, its Python driver and the Slurm accounting packages
+  community.general.zypper:
+    name:
+      - mariadb
+      - python311-PyMySQL
+      - slurm-slurmdbd
+      - slurm-seff
+    state: present
+
+- name: Ensure MariaDB is enabled and running
+  ansible.builtin.systemd_service:
+    name: mariadb
+    enabled: true
+    state: started
+
+- name: Wait for the MariaDB socket
+  ansible.builtin.wait_for:
+    path: "{{ slurmdbd_mariadb_socket }}"
+    timeout: 30
+
+- name: Create the Slurm accounting database
+  community.mysql.mysql_db:
+    name: "{{ slurmdbd_db_name }}"
+    state: present
+    login_user: root
+    login_unix_socket: "{{ slurmdbd_mariadb_socket }}"
+
+- name: Create the Slurm database user
+  community.mysql.mysql_user:
+    name: "{{ slurmdbd_db_user }}"
+    host: localhost
+    password: "{{ slurmdbd_db_password }}"
+    priv: "{{ slurmdbd_db_name }}.*:ALL"
+    state: present
+    login_user: root
+    login_unix_socket: "{{ slurmdbd_mariadb_socket }}"
+  no_log: true
+
+- name: Remove anonymous database accounts
+  community.mysql.mysql_user:
+    name: ""
+    host_all: true
+    state: absent
+    login_user: root
+    login_unix_socket: "{{ slurmdbd_mariadb_socket }}"
+
+- name: Remove the test database
+  community.mysql.mysql_db:
+    name: test
+    state: absent
+    login_user: root
+    login_unix_socket: "{{ slurmdbd_mariadb_socket }}"

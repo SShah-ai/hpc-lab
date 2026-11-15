@@ -5,4 +5,15 @@
   roles:
     - common
     - munge
+
+- name: Slurm accounting database and daemon
+  hosts: controller
+  become: true
+  roles:
+    - slurmdbd
+
+- name: Slurm controller and compute nodes
+  hosts: cluster
+  become: true
+  roles:
     - slurm

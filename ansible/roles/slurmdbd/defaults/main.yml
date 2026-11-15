@@ -1,0 +1,2 @@
+---
+slurmdbd_mariadb_socket: /run/mysql/mysql.sock
