@@ -60,15 +60,15 @@ Tested on Ubuntu 26.04 with 8 GB of RAM.
    ```
 5. Accept the nodes' SSH host keys, then run the playbook:
    ```
-   for ip in 192.168.56.10 192.168.56.11 192.168.56.12; do ssh -o StrictHostKeyChecking=accept-new shah@$ip true; done
+   for ip in 192.168.56.10 192.168.56.11 192.168.56.12; do ssh -o StrictHostKeyChecking=accept-new sayed@$ip true; done
    cd ansible && ansible-playbook site.yml
    ```
 
 ## Verify
 
 ```
-ssh shah@192.168.56.10 sinfo
-ssh shah@192.168.56.10 'srun -N2 hostname'
+ssh sayed@192.168.56.10 sinfo
+ssh sayed@192.168.56.10 'srun -N2 hostname'
 ```
 
 Expected: the `debug` partition with `node01` and `node02` idle, and one hostname from each node.
