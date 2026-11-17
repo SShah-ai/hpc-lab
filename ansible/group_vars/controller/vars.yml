@@ -2,3 +2,12 @@
 slurmdbd_db_name: slurm_acct_db
 slurmdbd_db_user: slurm
 slurmdbd_db_password: "{{ vault_slurmdbd_db_password }}"
+
+slurm_account_list:
+  - name: lab
+    description: HPC lab
+    organization: home
+
+slurm_user_list:
+  - name: sayed
+    account: lab

@@ -17,3 +17,9 @@
   become: true
   roles:
     - slurm
+
+- name: Slurm accounts and users
+  hosts: controller
+  become: true
+  roles:
+    - slurm_accounts

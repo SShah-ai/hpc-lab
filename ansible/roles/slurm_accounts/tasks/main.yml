@@ -1,0 +1,43 @@
+---
+- name: Check that the cluster is registered in the accounting database
+  ansible.builtin.command: sacctmgr --noheader --parsable2 show cluster {{ slurm_cluster_name }} format=Cluster
+  register: slurm_accounts_cluster_check
+  changed_when: false
+
+- name: Register the cluster if slurmctld has not done it yet
+  ansible.builtin.command: sacctmgr --immediate add cluster {{ slurm_cluster_name }}
+  when: slurm_accounts_cluster_check.stdout | length == 0
+  changed_when: true
+
+- name: Check which Slurm accounts exist
+  ansible.builtin.command: sacctmgr --noheader --parsable2 show account {{ item.name }} format=Account
+  loop: "{{ slurm_account_list }}"
+  register: slurm_accounts_account_check
+  changed_when: false
+
+- name: Add missing Slurm accounts
+  ansible.builtin.command: >-
+    sacctmgr --immediate add account {{ item.item.name }}
+    Description="{{ item.item.description }}"
+    Organization="{{ item.item.organization }}"
+  loop: "{{ slurm_accounts_account_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: item.stdout | length == 0
+  changed_when: true
+
+- name: Check which user associations exist
+  ansible.builtin.command: >-
+    sacctmgr --noheader --parsable2 show assoc
+    where user={{ item.name }} account={{ item.account }} format=User
+  loop: "{{ slurm_user_list }}"
+  register: slurm_accounts_user_check
+  changed_when: false
+
+- name: Add missing user associations
+  ansible.builtin.command: sacctmgr --immediate add user {{ item.item.name }} Account={{ item.item.account }}
+  loop: "{{ slurm_accounts_user_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: item.stdout | length == 0
+  changed_when: true
