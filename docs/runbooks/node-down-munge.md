@@ -48,7 +48,7 @@ Start with the controller, then the node's log, then the service. The user-facin
    ```
    sudo scontrol update nodename=node01 state=resume
    ```
-   Restarting slurmd on the node should also work, because slurmd registers when it starts. I have not tested that yet.
+   Restarting slurmd on the node also works, because slurmd registers when it starts. I confirmed this in the clock skew drill: after `systemctl restart slurmd`, the node went straight back to `idle`.
 
 ## Verify
 
