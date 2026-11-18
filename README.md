@@ -30,6 +30,7 @@ Each VM disk is a copy-on-write overlay on one read-only base image, so a node c
 cloud-init/build-vms.sh            creates the three VMs (overlay disk, cloud-init seed, virt-install)
 cloud-init/destroy-vms.sh          removes the VMs, their disks and old SSH host keys
 libvirt/hpc-net.xml                the isolated cluster network
+docs/runbooks/                     drill write-ups: symptom, checks, cause, fix
 ansible/ansible.cfg
 ansible/inventory/hosts.ini        groups: controller, compute, cluster
 ansible/group_vars/cluster.yml     cluster-wide variables
