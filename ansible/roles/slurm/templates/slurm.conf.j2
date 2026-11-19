@@ -37,6 +37,7 @@ DefMemPerCPU={{ slurm_def_mem_per_cpu }}
 AccountingStorageType=accounting_storage/slurmdbd
 AccountingStorageHost={{ groups["controller"][0] }}
 AccountingStoragePort=6819
+AccountingStorageEnforce={{ slurm_accounting_enforce }}
 JobAcctGatherType=jobacct_gather/linux
 JobAcctGatherFrequency=30
 JobCompType=jobcomp/none

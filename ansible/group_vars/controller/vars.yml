@@ -11,3 +11,5 @@ slurm_account_list:
 slurm_user_list:
   - name: sayed
     account: lab
+  - name: labuser
+    account: lab
