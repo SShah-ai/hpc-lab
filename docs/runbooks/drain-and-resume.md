@@ -42,4 +42,4 @@ Jobs that do not name a node run on the other nodes as normal.
 ## Notes
 
 - Resuming does not affect jobs that were already running. In my test, the job running on node01 kept going through the drain and the resume.
-- After the resume, a waiting job stayed pending with `(Resources)` even though node01 had a free CPU. The running job had not asked for memory, so Slurm had given it all of the node's memory. Setting `DefMemPerCPU` in `slurm.conf` would stop one small job taking a whole node.
+- After the resume, a waiting job stayed pending with `(Resources)` even though node01 had a free CPU. The running job had not asked for memory, so Slurm had given it all of the node's memory. This is now fixed: `slurm.conf` sets `DefMemPerCPU=400`, and in a later test two jobs without `--mem` ran on node01 at the same time.
