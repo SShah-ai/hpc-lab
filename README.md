@@ -97,7 +97,20 @@ MariaDB listens only on 127.0.0.1, and its root account can only log in through 
 
 The `slurm_accounts` role registers cluster `hpclab`, account `lab` and user `sayed`. Each one is checked with `sacctmgr show` first and only added if missing, so the play can run any number of times.
 
-`sacct` shows each job and step with its state, exit code, run time and peak memory. `seff` compares what a job used with what it asked for, which is the quickest way to answer "why was my job slow?" or "how much memory should I request?". A job keeps the association it had when it ran. Jobs submitted before a user was added show no account, and adding the user later does not change them.
+`sacct` shows each job and step with its state, exit code, run time and peak memory. `seff` compares what a job used with what it asked for, which is the quickest way to answer "why was my job slow?" or "how much memory should I request?". A job keeps the association it had when it ran. Jobs submitted before a user was added show no account, and adding the user later does not change them. `slurm.conf` now sets `AccountingStorageEnforce=associations`, so a user without an association cannot submit jobs at all.
+
+## Runbooks
+
+Each drill broke one thing on purpose. The write-up records what I saw, how I found the cause, and the fix.
+
+| Runbook | Fault |
+|---|---|
+| [Drain and resume](docs/runbooks/drain-and-resume.md) | Taking a node out for maintenance without killing jobs |
+| [Node down: MUNGE](docs/runbooks/node-down-munge.md) | munged stopped on a compute node |
+| [Node down: clock skew](docs/runbooks/node-down-clock-skew.md) | chronyd stopped and the clock ten minutes ahead |
+| [Low RealMemory](docs/runbooks/node-drained-low-realmemory.md) | `slurm.conf` promising more memory than the nodes have |
+| [Accounting down](docs/runbooks/accounting-down-slurmdbd.md) | slurmdbd stopped while jobs run |
+| [Job rejected: no association](docs/runbooks/job-rejected-no-association.md) | A user with no association, with enforcement on |
 
 ## Problems I hit and how I fixed them
 
@@ -116,6 +129,8 @@ All three are back in the template. Now I diff vendor defaults before replacing 
 
 **slurmdbd logged "Database settings not recommended values".** It flags `innodb_buffer_pool_size` and `innodb_lock_wait_timeout` when they are below half of the values in Slurm's accounting documentation (1024M and 900 seconds). MariaDB's defaults were 128M and 50 seconds. The role now adds a drop-in file at `/etc/my.cnf.d/slurm.cnf` with a 512M buffer pool, which is as far as ctl01's 1.5 GB of memory allows, and a 900-second lock wait. After the restart, the error no longer appears in the log.
 
+**One small job took a whole node's memory.** In the drain drill, a job that did not ask for memory was given all 869 MB of node01, so a second job waited even though a CPU was free. `slurm.conf` now sets `DefMemPerCPU=400`, and two jobs without `--mem` run on the same node.
+
 ## Notes
 
 - openSUSE Leap 15.6 reached end of life in April 2026 and gets no more updates. That is acceptable here because the cluster network is isolated, but it is not a setup for production.
@@ -125,7 +140,7 @@ All three are back in the template. Now I diff vendor defaults before replacing 
 
 ## Next
 
-- Association enforcement, partitions, limits, and node drain and resume drills
+- Partitions with different time limits, and memory limits enforced with cgroups
 - LDAP logins through SSSD, and NFS home directories with AutoFS (job output currently lands on the compute node's local disk)
 - A cluster migration with a written method of procedure and rollback plan
 - A Redfish health-check script and an NVIDIA XID error reference
