@@ -47,3 +47,18 @@
     - { name: repo-non-oss, description: "Non-OSS Repository", repo: "http://download.opensuse.org/distribution/leap/15.6/repo/non-oss/" }
     - { name: repo-update-non-oss, description: "Update Repository (Non-Oss)", repo: "http://download.opensuse.org/update/leap/15.6/non-oss/" }
     - { name: repo-openh264, description: "Open H.264 Codec (openSUSE Leap)", repo: "http://codecs.opensuse.org/openh264/openSUSE_Leap/" }
+
+- name: Create groups for local cluster users
+  ansible.builtin.group:
+    name: "{{ item.name }}"
+    gid: "{{ item.uid }}"
+  loop: "{{ cluster_local_users }}"
+
+- name: Create local cluster users with the same UID on every node
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid }}"
+    group: "{{ item.name }}"
+    shell: /bin/bash
+    create_home: true
+  loop: "{{ cluster_local_users }}"

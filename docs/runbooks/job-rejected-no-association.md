@@ -61,3 +61,42 @@ No restart was needed. The next job from `labuser` was accepted straight away.
 
 - Manage associations in code, as the `slurm_accounts` role does, so adding a user is one entry in a list.
 - Create the Linux account and the association in the same change, so neither exists without the other.
+
+## Second cause: association created before the Linux user existed
+
+Found during the rebuild test. The error was the same, but the user did have an association.
+
+### Checks
+
+1. The association exists in the database:
+   ```
+   sacctmgr -n -P show assoc where user=labuser format=Cluster,Account,User
+   ```
+   It returned `hpclab|lab|labuser`.
+2. The controller's own copy of the user:
+   ```
+   scontrol show assoc_mgr flags=users users=labuser,sayed
+   ```
+   ```
+   UserName=sayed(1000) DefAccount=lab
+   UserName=labuser(4294967294) DefAccount=(null)
+   ```
+   `sayed` is linked to UID 1000. `labuser` shows 4294967294 (0xFFFFFFFE), the value Slurm uses for "no value": the controller never linked the name to a UID.
+3. The controller log had nothing about `labuser`. Only `scontrol show assoc_mgr` showed the problem.
+
+### Cause
+
+During the rebuild, the association was created before the Linux user `labuser` existed on ctl01. slurmctld turns user names into UIDs when it loads associations, and jobs arrive with a UID. Creating the user afterwards did not update the controller's copy.
+
+### Fix
+
+`sudo scontrol reconfigure` was not enough. It set the UID to 2001, but the user still had `DefAccount=(null)` and jobs were still rejected. Restarting the controller fixed it:
+```
+sudo systemctl restart slurmctld
+```
+The next job from `labuser` was accepted and ran under account `lab`.
+
+### Prevention
+
+- Create the Linux user before the association. The common role, which creates local users, runs in the first play, and the `slurm_accounts` role runs in the last, so a fresh build now does them in the right order.
+- With users from LDAP, the same failure can happen if an association is added before the directory is reachable from the controller. Check `id <user>` on ctl01 first.

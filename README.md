@@ -31,12 +31,13 @@ cloud-init/build-vms.sh            creates the three VMs (overlay disk, cloud-in
 cloud-init/destroy-vms.sh          removes the VMs, their disks and old SSH host keys
 libvirt/hpc-net.xml                the isolated cluster network
 docs/runbooks/                     drill write-ups: symptom, checks, cause, fix
+docs/procedures/rebuild.md         method of procedure for rebuilding the cluster from the repository
 ansible/ansible.cfg
 ansible/inventory/hosts.ini        groups: controller, compute, cluster
 ansible/group_vars/cluster.yml     cluster-wide variables
 ansible/group_vars/controller/     accounting settings; vault.yml holds the encrypted database password
 ansible/site.yml                   four plays: base setup, accounting, Slurm, accounts
-ansible/roles/common               packages, /etc/hosts from inventory, chrony, persistent journal, unused repos disabled
+ansible/roles/common               packages, /etc/hosts from inventory, chrony, persistent journal, unused repos disabled, local users
 ansible/roles/munge                one key generated on ctl01, copied to every node (munge:munge, 0400)
 ansible/roles/slurmdbd             MariaDB, the accounting database and user, slurmdbd.conf, slurmdbd
 ansible/roles/slurm                Slurm packages, slurm.conf from a template, slurmctld and slurmd
@@ -77,6 +78,8 @@ Tested on Ubuntu 26.04 with 8 GB of RAM.
    for ip in 192.168.56.10 192.168.56.11 192.168.56.12; do ssh -o StrictHostKeyChecking=accept-new sayed@$ip true; done
    ansible-playbook site.yml
    ```
+
+A full rebuild from a fresh clone of this repository took 6 seconds for the VMs and 2 minutes 13 seconds for the first playbook run. The second run changed nothing. The steps are in [docs/procedures/rebuild.md](docs/procedures/rebuild.md).
 
 ## Verify
 
@@ -130,6 +133,8 @@ All three are back in the template. Now I diff vendor defaults before replacing 
 **slurmdbd logged "Database settings not recommended values".** It flags `innodb_buffer_pool_size` and `innodb_lock_wait_timeout` when they are below half of the values in Slurm's accounting documentation (1024M and 900 seconds). MariaDB's defaults were 128M and 50 seconds. The role now adds a drop-in file at `/etc/my.cnf.d/slurm.cnf` with a 512M buffer pool, which is as far as ctl01's 1.5 GB of memory allows, and a 900-second lock wait. After the restart, the error no longer appears in the log.
 
 **One small job took a whole node's memory.** In the drain drill, a job that did not ask for memory was given all 869 MB of node01, so a second job waited even though a CPU was free. `slurm.conf` now sets `DefMemPerCPU=400`, and two jobs without `--mem` run on the same node.
+
+**A user's jobs were rejected after a rebuild, although the user had an association.** The association had been created before the Linux user existed, so `scontrol show assoc_mgr` showed the user with UID 4294967294, Slurm's value for "no value". `scontrol reconfigure` set the right UID but jobs were still rejected; restarting slurmctld fixed it. Local users are now created in the first play, before associations are added in the last.
 
 ## Notes
 
