@@ -1,0 +1,28 @@
+# Managed by Ansible - manual changes will be overwritten
+[sssd]
+services = nss, pam
+domains = {{ cluster_domain }}
+
+[domain/{{ cluster_domain }}]
+id_provider = ldap
+auth_provider = ldap
+chpass_provider = ldap
+access_provider = ldap
+
+ldap_uri = {{ ldap_uri }}
+ldap_search_base = {{ ldap_base_dn }}
+ldap_schema = rfc2307bis
+ldap_default_bind_dn = {{ ldap_sssd_bind_dn }}
+ldap_default_authtok = {{ ldap_sssd_bind_password }}
+ldap_tls_reqcert = demand
+ldap_tls_cacert = {{ ldap_client_ca_path }}
+
+# Refuse logins for accounts locked in 389 DS (nsAccountLock).
+ldap_access_order = expire
+ldap_account_expire_policy = rhds
+
+ldap_user_gecos = cn
+min_id = {{ ldap_client_min_id }}
+max_id = {{ ldap_client_max_id }}
+cache_credentials = true
+enumerate = false

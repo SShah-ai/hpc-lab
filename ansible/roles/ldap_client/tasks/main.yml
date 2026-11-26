@@ -20,3 +20,47 @@
     owner: root
     group: root
     mode: "0644"
+
+- name: Install SSSD and its LDAP provider
+  community.general.zypper:
+    name:
+      - sssd
+      - sssd-ldap
+      - sssd-tools
+    state: present
+
+- name: Deploy sssd.conf (contains the bind password)
+  ansible.builtin.template:
+    src: sssd.conf.j2
+    dest: /etc/sssd/sssd.conf
+    owner: root
+    group: sssd
+    mode: "0640"
+  diff: false
+  notify: Restart sssd
+
+- name: Ensure SSSD is enabled and running
+  ansible.builtin.systemd_service:
+    name: sssd
+    enabled: true
+    state: started
+
+- name: Look up users and groups in SSSD after the local files
+  ansible.builtin.lineinfile:
+    path: /etc/nsswitch.conf
+    regexp: "^{{ item }}:"
+    line: "{{ item }}:\t\tcompat sss"
+  loop:
+    - passwd
+    - group
+
+- name: Check whether PAM already uses SSSD
+  ansible.builtin.command: grep -q pam_sss.so /etc/pam.d/common-auth-pc
+  register: ldap_client_pam_sss
+  changed_when: false
+  failed_when: ldap_client_pam_sss.rc > 1
+
+- name: Add SSSD to the PAM stack with pam-config
+  ansible.builtin.command: pam-config --add --sss
+  when: ldap_client_pam_sss.rc == 1
+  changed_when: true

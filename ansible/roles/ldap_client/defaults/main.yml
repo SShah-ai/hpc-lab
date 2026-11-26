@@ -1,2 +1,5 @@
 ---
 ldap_client_ca_path: /etc/pki/trust/anchors/hpclab-ldap-ca.crt
+# SSSD ignores directory entries outside this ID range.
+ldap_client_min_id: 10000
+ldap_client_max_id: 19999
