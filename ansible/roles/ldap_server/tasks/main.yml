@@ -48,3 +48,9 @@
   loop:
     - 389
     - 636
+
+- name: Fetch the directory CA certificate to the Ansible host
+  ansible.builtin.fetch:
+    src: "/etc/dirsrv/slapd-{{ ldap_server_instance }}/ca.crt"
+    dest: "{{ ldap_ca_local_copy }}"
+    flat: true

@@ -12,6 +12,12 @@
   roles:
     - ldap_server
 
+- name: LDAP clients on every node
+  hosts: cluster
+  become: true
+  roles:
+    - ldap_client
+
 - name: Slurm accounting database and daemon
   hosts: controller
   become: true

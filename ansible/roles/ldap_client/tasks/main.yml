@@ -1,0 +1,22 @@
+---
+- name: Install the LDAP client tools
+  community.general.zypper:
+    name: openldap2-client
+    state: present
+
+- name: Trust the directory CA certificate
+  ansible.builtin.copy:
+    src: "{{ ldap_ca_local_copy }}"
+    dest: "{{ ldap_client_ca_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Update the CA trust store
+
+- name: Point the LDAP client tools at the directory
+  ansible.builtin.template:
+    src: ldap.conf.j2
+    dest: /etc/openldap/ldap.conf
+    owner: root
+    group: root
+    mode: "0644"

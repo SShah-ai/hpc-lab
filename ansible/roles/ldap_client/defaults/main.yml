@@ -1,0 +1,2 @@
+---
+ldap_client_ca_path: /etc/pki/trust/anchors/hpclab-ldap-ca.crt

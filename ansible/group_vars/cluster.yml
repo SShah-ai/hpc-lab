@@ -17,3 +17,7 @@ cluster_local_users:
 
 # Directory (LDAP). The base DN matches cluster_domain.
 ldap_base_dn: "dc=hpc,dc=lab"
+ldap_uri: "ldaps://{{ groups['controller'][0] }}.{{ cluster_domain }}"
+# The directory's CA certificate, copied from ctl01 to the Ansible host.
+# It is not secret, but every rebuild creates a new one, so it stays out of git.
+ldap_ca_local_copy: "{{ playbook_dir }}/.secrets/ldap-ca.crt"
