@@ -1,0 +1,3 @@
+---
+# Local socket of the 389 DS instance (instance name hpclab, see ldap_server).
+ldap_accounts_ldapi_uri: "ldapi://%2Fvar%2Frun%2Fslapd-hpclab.socket"

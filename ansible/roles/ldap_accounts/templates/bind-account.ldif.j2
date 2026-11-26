@@ -1,0 +1,7 @@
+dn: {{ ldap_sssd_bind_dn }}
+objectClass: top
+objectClass: applicationProcess
+objectClass: nsAccount
+cn: sssd
+description: Read-only bind account for SSSD on the cluster nodes
+userPassword: {{ ldap_sssd_bind_password }}

@@ -1,0 +1,14 @@
+dn: uid={{ item.name }},ou=people,{{ ldap_base_dn }}
+objectClass: top
+objectClass: nsPerson
+objectClass: nsAccount
+objectClass: nsOrgPerson
+objectClass: posixAccount
+uid: {{ item.name }}
+cn: {{ item.display_name }}
+displayName: {{ item.display_name }}
+uidNumber: {{ item.uid }}
+gidNumber: {{ item.gid }}
+homeDirectory: {{ cluster_home_root }}/{{ item.name }}
+loginShell: /bin/bash
+userPassword: {{ ldap_user_passwords[item.name] }}

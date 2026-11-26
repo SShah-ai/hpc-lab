@@ -21,3 +21,8 @@ ldap_uri: "ldaps://{{ groups['controller'][0] }}.{{ cluster_domain }}"
 # The directory's CA certificate, copied from ctl01 to the Ansible host.
 # It is not secret, but every rebuild creates a new one, so it stays out of git.
 ldap_ca_local_copy: "{{ playbook_dir }}/.secrets/ldap-ca.crt"
+ldap_sssd_bind_dn: "cn=sssd,ou=services,{{ ldap_base_dn }}"
+ldap_sssd_bind_password: "{{ vault_ldap_sssd_bind_password }}"
+
+# Home directories for directory (LDAP) users, served over NFS in stage 4.
+cluster_home_root: /nfs/home

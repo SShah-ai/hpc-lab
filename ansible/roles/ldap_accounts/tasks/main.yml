@@ -1,0 +1,62 @@
+---
+# Each change is a single LDAP operation over the local socket as root
+# (mapped to Directory Manager). The exit code is the LDAP result code:
+#   0 = done, 68 = entry already exists, 32 = no such entry, 20 = value already present.
+# Accepting those codes makes every task safe to run again.
+
+- name: Remove the sample entries created by dscreate
+  ansible.builtin.command:
+    cmd: "ldapdelete -Q -Y EXTERNAL -H {{ ldap_accounts_ldapi_uri }} {{ item }}"
+  loop:
+    - "uid=demo_user,ou=people,{{ ldap_base_dn }}"
+    - "cn=demo_group,ou=groups,{{ ldap_base_dn }}"
+  register: ldap_accounts_sample_delete
+  changed_when: ldap_accounts_sample_delete.rc == 0
+  failed_when: ldap_accounts_sample_delete.rc not in [0, 32]
+
+- name: Create the SSSD bind account
+  ansible.builtin.command:
+    cmd: "ldapadd -Q -Y EXTERNAL -H {{ ldap_accounts_ldapi_uri }}"
+    stdin: "{{ lookup('ansible.builtin.template', 'bind-account.ldif.j2') }}"
+  register: ldap_accounts_bind_add
+  changed_when: ldap_accounts_bind_add.rc == 0
+  failed_when: ldap_accounts_bind_add.rc not in [0, 68]
+  no_log: true
+
+- name: Create the LDAP groups
+  ansible.builtin.command:
+    cmd: "ldapadd -Q -Y EXTERNAL -H {{ ldap_accounts_ldapi_uri }}"
+    stdin: "{{ lookup('ansible.builtin.template', 'group.ldif.j2') }}"
+  loop: "{{ ldap_group_list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: ldap_accounts_group_add
+  changed_when: ldap_accounts_group_add.rc == 0
+  failed_when: ldap_accounts_group_add.rc not in [0, 68]
+
+- name: Create the LDAP users
+  ansible.builtin.command:
+    cmd: "ldapadd -Q -Y EXTERNAL -H {{ ldap_accounts_ldapi_uri }}"
+    stdin: "{{ lookup('ansible.builtin.template', 'user.ldif.j2') }}"
+  loop: "{{ ldap_user_list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: ldap_accounts_user_add
+  changed_when: ldap_accounts_user_add.rc == 0
+  failed_when: ldap_accounts_user_add.rc not in [0, 68]
+  no_log: true
+
+- name: Add users to their LDAP groups
+  ansible.builtin.command:
+    cmd: "ldapmodify -Q -Y EXTERNAL -H {{ ldap_accounts_ldapi_uri }}"
+    stdin: |
+      dn: cn={{ item.0.name }},ou=groups,{{ ldap_base_dn }}
+      changetype: modify
+      add: member
+      member: uid={{ item.1 }},ou=people,{{ ldap_base_dn }}
+  loop: "{{ ldap_group_list | subelements('members') }}"
+  loop_control:
+    label: "{{ item.1 }} in {{ item.0.name }}"
+  register: ldap_accounts_member_add
+  changed_when: ldap_accounts_member_add.rc == 0
+  failed_when: ldap_accounts_member_add.rc not in [0, 20]

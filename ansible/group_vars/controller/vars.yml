@@ -15,3 +15,20 @@ slurm_user_list:
     account: lab
 
 ldap_dm_password: "{{ vault_ldap_dm_password }}"
+ldap_user_passwords: "{{ vault_ldap_user_passwords }}"
+
+# Directory (LDAP) groups and users. IDs start at 10000, clear of local accounts.
+ldap_group_list:
+  - name: hpcusers
+    gid: 10000
+    members: [aaba, lala]
+
+ldap_user_list:
+  - name: aaba
+    uid: 10001
+    gid: 10000
+    display_name: Aaba Lab
+  - name: lala
+    uid: 10002
+    gid: 10000
+    display_name: Lala Lab

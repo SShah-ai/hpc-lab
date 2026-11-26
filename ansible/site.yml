@@ -11,6 +11,7 @@
   become: true
   roles:
     - ldap_server
+    - ldap_accounts
 
 - name: LDAP clients on every node
   hosts: cluster
