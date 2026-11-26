@@ -1,0 +1,50 @@
+---
+- name: Install 389 Directory Server and the LDAP client tools
+  community.general.zypper:
+    name:
+      - 389-ds
+      - openldap2-client
+    state: present
+
+- name: Check whether the directory server instance exists
+  ansible.builtin.stat:
+    path: "/etc/dirsrv/slapd-{{ ldap_server_instance }}"
+  register: ldap_server_instance_dir
+
+- name: Create the directory server instance (first run only)
+  when: not ldap_server_instance_dir.stat.exists
+  block:
+    - name: Write the dscreate answer file (contains the Directory Manager password)
+      ansible.builtin.template:
+        src: instance.inf.j2
+        dest: "/root/{{ ldap_server_instance }}.inf"
+        owner: root
+        group: root
+        mode: "0600"
+      diff: false
+
+    - name: Create the instance with dscreate
+      ansible.builtin.command:
+        cmd: "dscreate from-file /root/{{ ldap_server_instance }}.inf"
+      changed_when: true
+
+  always:
+    - name: Remove the answer file
+      ansible.builtin.file:
+        path: "/root/{{ ldap_server_instance }}.inf"
+        state: absent
+
+- name: Ensure the directory server is enabled and running
+  ansible.builtin.systemd_service:
+    name: "dirsrv@{{ ldap_server_instance }}"
+    enabled: true
+    state: started
+
+- name: Wait for LDAP and LDAPS to listen
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: "{{ item }}"
+    timeout: 60
+  loop:
+    - 389
+    - 636

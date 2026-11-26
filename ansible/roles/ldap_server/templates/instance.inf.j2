@@ -1,0 +1,16 @@
+# Managed by Ansible. Read once by dscreate, then deleted.
+[general]
+config_version = 2
+full_machine_name = {{ inventory_hostname }}.{{ cluster_domain }}
+
+[slapd]
+instance_name = {{ ldap_server_instance }}
+root_dn = cn=Directory Manager
+root_password = {{ ldap_dm_password }}
+port = 389
+secure_port = 636
+self_sign_cert = True
+
+[backend-userroot]
+suffix = {{ ldap_base_dn }}
+sample_entries = yes

@@ -6,6 +6,12 @@
     - common
     - munge
 
+- name: Directory server (389 DS) on the controller
+  hosts: controller
+  become: true
+  roles:
+    - ldap_server
+
 - name: Slurm accounting database and daemon
   hosts: controller
   become: true
