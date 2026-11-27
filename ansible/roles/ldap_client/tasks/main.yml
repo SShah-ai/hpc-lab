@@ -11,7 +11,9 @@
     owner: root
     group: root
     mode: "0644"
-  notify: Update the CA trust store
+  notify:
+    - Update the CA trust store
+    - Restart sssd
 
 - name: Point the LDAP client tools at the directory
   ansible.builtin.template:
