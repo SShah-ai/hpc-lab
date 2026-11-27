@@ -162,6 +162,7 @@ ansible cluster -b -m shell -a "rm -rf /home/labuser.pre-migration /root/labuser
 | assoc_mgr | `labuser(10003) DefAccount=lab` |
 | Test job 6 | Ran on node01 and node02 as UID 10003, output in `/nfs/home/labuser` |
 | Files left with UID 2001 | Only `/home/labuser.pre-migration` |
+| Close-out | Rollback copies removed the same evening; no files left with UID or GID 2001 |
 
 Backup checksums (SHA-256):
 ```
