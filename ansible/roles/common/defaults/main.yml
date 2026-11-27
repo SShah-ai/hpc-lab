@@ -1,0 +1,4 @@
+---
+# Highest UID and GID that useradd and groupadd may give a new local account.
+# Directory (LDAP) accounts start at 10000, so local ones stay below.
+common_local_id_max: 9999

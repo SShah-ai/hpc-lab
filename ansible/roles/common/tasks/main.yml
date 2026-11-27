@@ -62,3 +62,12 @@
     shell: /bin/bash
     create_home: true
   loop: "{{ cluster_local_users }}"
+
+- name: Keep new local UIDs and GIDs below the directory range
+  ansible.builtin.lineinfile:
+    path: /etc/login.defs
+    regexp: "^{{ item }}\\s"
+    line: "{{ item }}\t\t\t{{ common_local_id_max }}"
+  loop:
+    - UID_MAX
+    - GID_MAX

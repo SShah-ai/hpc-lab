@@ -66,3 +66,20 @@
   ansible.builtin.command: pam-config --add --sss
   when: ldap_client_pam_sss.rc == 1
   changed_when: true
+
+- name: Find local accounts that hide a directory user of the same name
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      getent -s files passwd | cut -d: -f1 | while read -r name; do
+        if getent -s sss passwd "$name" >/dev/null; then echo "$name"; fi
+      done
+    executable: /bin/bash
+  register: ldap_client_shadowed
+  changed_when: false
+
+- name: Fail if a local account hides a directory user
+  ansible.builtin.assert:
+    that: ldap_client_shadowed.stdout_lines | length == 0
+    fail_msg: "Local accounts hide directory users: {{ ldap_client_shadowed.stdout_lines | join(', ') }}"
+    quiet: true
