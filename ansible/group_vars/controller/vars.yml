@@ -16,7 +16,7 @@ slurm_user_list:
   - name: aaba
     account: lab
   - name: lala
-    account: lab  
+    account: lab
 
 ldap_dm_password: "{{ vault_ldap_dm_password }}"
 ldap_user_passwords: "{{ vault_ldap_user_passwords }}"
