@@ -11,9 +11,8 @@ slurm_default_partition: debug
 slurm_mem_fraction: 0.9
 slurm_def_mem_per_cpu: 400
 slurm_accounting_enforce: associations
-cluster_local_users:
-  - name: labuser
-    uid: 2001
+# Local accounts created on every node. labuser moved to the directory (see docs/procedures).
+cluster_local_users: []
 
 # Directory (LDAP). The base DN matches cluster_domain.
 ldap_base_dn: "dc=hpc,dc=lab"

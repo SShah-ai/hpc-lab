@@ -25,7 +25,7 @@ ldap_user_passwords: "{{ vault_ldap_user_passwords }}"
 ldap_group_list:
   - name: hpcusers
     gid: 10000
-    members: [aaba, lala]
+    members: [aaba, lala, labuser]
 
 ldap_user_list:
   - name: aaba
@@ -36,3 +36,7 @@ ldap_user_list:
     uid: 10002
     gid: 10000
     display_name: Lala Lab
+  - name: labuser
+    uid: 10003
+    gid: 10000
+    display_name: Lab User
