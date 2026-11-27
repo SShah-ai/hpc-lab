@@ -1,0 +1,38 @@
+---
+- name: Install the NFS client and AutoFS
+  community.general.zypper:
+    name:
+      - nfs-client
+      - autofs
+    state: present
+
+- name: Read automount maps from local files only (no NIS)
+  ansible.builtin.lineinfile:
+    path: /etc/nsswitch.conf
+    regexp: "^automount:"
+    line: "automount:\tfiles"
+  notify: Reload autofs
+
+- name: Deploy the AutoFS master map
+  ansible.builtin.template:
+    src: auto.master.j2
+    dest: /etc/auto.master
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload autofs
+
+- name: Deploy the home directory map
+  ansible.builtin.template:
+    src: auto.nfs-home.j2
+    dest: /etc/auto.nfs-home
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload autofs
+
+- name: Ensure AutoFS is enabled and running
+  ansible.builtin.systemd_service:
+    name: autofs
+    enabled: true
+    state: started

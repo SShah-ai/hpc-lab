@@ -1,0 +1,4 @@
+---
+# Unmount a home directory after this many idle seconds.
+autofs_home_timeout: 300
+autofs_home_options: "-fstype=nfs4,rw,hard,nosuid,nodev"

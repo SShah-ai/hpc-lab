@@ -1,0 +1,54 @@
+---
+- name: Install the NFS server
+  community.general.zypper:
+    name: nfs-kernel-server
+    state: present
+
+- name: Serve NFS version 4 only
+  ansible.builtin.lineinfile:
+    path: /etc/sysconfig/nfs
+    regexp: "^NFS3_SERVER_SUPPORT="
+    line: 'NFS3_SERVER_SUPPORT="no"'
+  notify: Restart nfs-server
+
+- name: Create the root of the home directories
+  ansible.builtin.file:
+    path: "{{ cluster_home_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create a private home directory for each directory user
+  ansible.builtin.file:
+    path: "{{ cluster_home_root }}/{{ item.name }}"
+    state: directory
+    owner: "{{ item.uid }}"
+    group: "{{ item.gid }}"
+    mode: "0700"
+  loop: "{{ ldap_user_list }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Create the exports drop-in directory
+  ansible.builtin.file:
+    path: /etc/exports.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Export the home directories to the cluster network only
+  ansible.builtin.template:
+    src: hpc-home.exports.j2
+    dest: /etc/exports.d/hpc-home.exports
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload NFS exports
+
+- name: Ensure the NFS server is enabled and running
+  ansible.builtin.systemd_service:
+    name: nfs-server
+    enabled: true
+    state: started

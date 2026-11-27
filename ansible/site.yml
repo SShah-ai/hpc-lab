@@ -19,6 +19,18 @@
   roles:
     - ldap_client
 
+- name: NFS home directories on the controller
+  hosts: controller
+  become: true
+  roles:
+    - nfs_server
+
+- name: Automounted home directories on the compute nodes
+  hosts: compute
+  become: true
+  roles:
+    - autofs
+
 - name: Slurm accounting database and daemon
   hosts: controller
   become: true

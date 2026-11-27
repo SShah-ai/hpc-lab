@@ -1,0 +1,2 @@
+---
+nfs_server_export_options: "rw,sync,no_subtree_check,root_squash"
