@@ -54,3 +54,15 @@
     src: "/etc/dirsrv/slapd-{{ ldap_server_instance }}/ca.crt"
     dest: "{{ ldap_ca_local_copy }}"
     flat: true
+
+- name: Read the anonymous access setting
+  ansible.builtin.command:
+    cmd: "dsconf {{ ldap_server_instance }} config get nsslapd-allow-anonymous-access"
+  register: ldap_server_anonymous_current
+  changed_when: false
+
+- name: Limit what anonymous clients can read
+  ansible.builtin.command:
+    cmd: "dsconf {{ ldap_server_instance }} config replace nsslapd-allow-anonymous-access={{ ldap_server_anonymous_access }}"
+  when: ldap_server_anonymous_current.stdout.split()[-1] != ldap_server_anonymous_access
+  changed_when: true

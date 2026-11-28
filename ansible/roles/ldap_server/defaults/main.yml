@@ -1,2 +1,7 @@
 ---
 ldap_server_instance: hpclab
+
+# What anonymous clients may do: "on" (anything the access rules allow),
+# "rootdse" (read only the server's description at base "") or "off".
+# SSSD reads the root DSE before it binds, so "off" is not used.
+ldap_server_anonymous_access: rootdse
