@@ -12,9 +12,9 @@ Lookups still work from the cache, and users with no cached password on that nod
 
 1. One node or all, from the `ansible` folder:
    ```
-   ansible cluster -m command -a "ldapwhoami -x"
+   ansible cluster -m command -a 'ldapsearch -x -LLL -s base -b "" namingContexts'
    ```
-   node01 returned `anonymous` and node02 failed, so the server was fine and the problem was on node02.
+   A node that reaches the server prints `namingContexts: dc=hpc,dc=lab`. In the drill this check was `ldapwhoami -x`: node01 returned `anonymous` and node02 failed, so the server was fine and the problem was on node02. Since anonymous reads were limited (commit `e3f2d28`), `ldapwhoami -x` fails with `Inappropriate authentication (48)` on every node, so it no longer tells a healthy node from a broken one.
 2. The TLS check from the node:
    ```
    openssl s_client -connect ctl01.hpc.lab:636 -verify_hostname ctl01.hpc.lab </dev/null 2>/dev/null | grep 'Verify return code'
@@ -51,12 +51,12 @@ The ldap_client role copies the CA that was fetched from ctl01 (`ansible/.secret
 
 ```
 openssl x509 -in /etc/pki/trust/anchors/hpclab-ldap-ca.crt -noout -subject -fingerprint -sha256
-ldapwhoami -x
+ldapsearch -x -LLL -s base -b "" namingContexts
 sudo sss_cache -E
 id labuser
 sudo grep -E "ldap_install_tls failed|SSSD is offline" /var/log/sssd/sssd_hpc.lab.log | tail -n 2
 ```
-The fingerprint matched the original (`CA:97:1A:...:CC:91`), `ldapwhoami` returned `anonymous`, and the forced refresh logged no new errors: the last ones were from 14:09:31, before the playbook ran. A second playbook run showed `changed=0`.
+The fingerprint matched the original (`CA:97:1A:...:CC:91`), the directory answered (`ldapwhoami -x` returned `anonymous`, before anonymous reads were limited), and the forced refresh logged no new errors: the last ones were from 14:09:31, before the playbook ran. A second playbook run showed `changed=0`.
 
 `sss_cache -E` followed by `id` makes SSSD go to the directory for that user. A login is not a good test here, because a user with a cached password can log in while SSSD is offline.
 

@@ -14,9 +14,9 @@ aaba logged in on the same node without a problem. `id` and `getent` still retur
 
 1. Whether the directory answers, from any node:
    ```
-   ldapwhoami -x
+   ldapsearch -x -LLL -s base -b "" namingContexts
    ```
-   During the outage: `ldap_sasl_bind(SIMPLE): Can't contact LDAP server (-1)`. Normally `anonymous`.
+   Normally `namingContexts: dc=hpc,dc=lab`. If the server is down, it fails with `Can't contact LDAP server (-1)`. This reads the root DSE, the only thing anonymous clients may still read. In the drill this check was `ldapwhoami -x`, which returned `anonymous` normally and `ldap_sasl_bind(SIMPLE): Can't contact LDAP server (-1)` during the outage. Since anonymous reads were limited (commit `e3f2d28`), `ldapwhoami -x` fails with `Inappropriate authentication (48)` even when the server is fine.
 2. Whether lookups still work:
    ```
    time id lala
@@ -69,10 +69,10 @@ aaba had logged in on node02 before, so her hash was cached there. lala had neve
 ## Verify
 
 ```
-ldapwhoami -x
+ldapsearch -x -LLL -s base -b "" namingContexts
 su - lala -c 'id'
 ```
-After SIGUSR2, `ldapwhoami` returned `anonymous` on both compute nodes, and lala logged in on node02. That login went to the directory, which shows her password was right all along, and it stored her password hash on node02.
+After SIGUSR2, the directory answered on both compute nodes (`ldapwhoami -x` returned `anonymous`, before anonymous reads were limited), and lala logged in on node02. That login went to the directory, which shows her password was right all along, and it stored her password hash on node02.
 
 ## Timeline from the lab
 

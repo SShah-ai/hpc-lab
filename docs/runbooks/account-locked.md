@@ -17,11 +17,11 @@ This is the same message as a wrong password. `id lala` and `getent passwd lala`
    sudo dsidm hpclab -b dc=hpc,dc=lab account entry-status uid=lala,ou=people,dc=hpc,dc=lab
    ```
    A locked account shows `Entry State: directly locked through nsAccountLock`. A normal one shows `activated`. Root on ctl01 uses the local LDAPI socket, so there is no password prompt.
-2. The same from any node:
+2. The same from any node, as SSSD sees it:
    ```
-   ldapsearch -x -LLL uid=lala nsAccountLock
+   sudo sed -n 's/^ldap_default_authtok = //p' /etc/sssd/sssd.conf | tr -d '\n' | ldapsearch -x -D cn=sssd,ou=services,dc=hpc,dc=lab -y /dev/stdin -LLL uid=lala nsAccountLock
    ```
-   `nsAccountLock: true` means locked. No `nsAccountLock` line means not locked.
+   `nsAccountLock: true` means locked. No `nsAccountLock` line means not locked. This binds as SSSD's account with the password from the node's `sssd.conf`, without showing it. Anonymous searches have been refused since commit `e3f2d28`.
 3. A bind as the user, with their password:
    ```
    ldapwhoami -x -D uid=lala,ou=people,dc=hpc,dc=lab -W
