@@ -1,4 +1,17 @@
 ---
+# slurm.conf has a NodeName line for every compute node, built from that
+# node's facts. A run with --limit gathers facts only for the limited hosts,
+# so gather the missing ones here.
+- name: Gather hardware facts from compute nodes outside the current run
+  ansible.builtin.setup:
+    gather_subset:
+      - hardware
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  loop: "{{ groups['compute'] }}"
+  run_once: true
+  when: hostvars[item].ansible_facts.processor_vcpus is not defined
+
 - name: Install Slurm controller packages
   community.general.zypper:
     name: [slurm, slurm-munge]
