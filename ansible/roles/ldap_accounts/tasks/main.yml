@@ -1,7 +1,7 @@
 ---
 # Each change is a single LDAP operation over the local socket as root
 # (mapped to Directory Manager). The exit code is the LDAP result code:
-#   0 = done, 68 = entry already exists, 32 = no such entry, 20 = value already present.
+#   0 = done, 68 = entry already exists, 32 = no such entry, 20 = value already present, 49 = wrong password.
 # Accepting those codes makes every task safe to run again.
 
 - name: Remove the sample entries created by dscreate
@@ -60,3 +60,28 @@
   register: ldap_accounts_member_add
   changed_when: ldap_accounts_member_add.rc == 0
   failed_when: ldap_accounts_member_add.rc not in [0, 20]
+
+# The bind account is created once, so a new password in the vault would
+# never reach the directory. Check the vault password with a real bind
+# and set it when the directory refuses it.
+- name: Check that the SSSD bind account accepts the password in the vault
+  ansible.builtin.command:
+    cmd: "ldapwhoami -x -H {{ ldap_accounts_ldapi_uri }} -D {{ ldap_sssd_bind_dn }} -y /dev/stdin"
+    stdin: "{{ ldap_sssd_bind_password }}"
+    stdin_add_newline: false
+  register: ldap_accounts_bind_check
+  changed_when: false
+  failed_when: ldap_accounts_bind_check.rc not in [0, 49]
+  no_log: true
+
+- name: Set the SSSD bind account password from the vault
+  ansible.builtin.command:
+    cmd: "ldapmodify -Q -Y EXTERNAL -H {{ ldap_accounts_ldapi_uri }}"
+    stdin: |
+      dn: {{ ldap_sssd_bind_dn }}
+      changetype: modify
+      replace: userPassword
+      userPassword:: {{ ldap_sssd_bind_password | b64encode }}
+  when: ldap_accounts_bind_check.rc == 49
+  changed_when: true
+  no_log: true
